@@ -18,19 +18,65 @@
     <item row="1" column="0">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QCustomPlot" name="plot" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="QTabWidget" name="tabWidget">
+        <property name="currentIndex">
+         <number>2</number>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>4096</width>
-          <height>4096</height>
-         </size>
-        </property>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>Arrhythmia</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="QCustomPlot" name="plot" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>4096</width>
+                <height>4096</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>Myocardial</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <item>
+             <widget class="QCustomPlot" name="widget" native="true"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_3">
+         <attribute name="title">
+          <string>Pericarditis</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QCustomPlot" name="widget_2" native="true"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
      </layout>
