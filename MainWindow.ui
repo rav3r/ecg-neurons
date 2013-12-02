@@ -45,8 +45,33 @@
     <string>Load Physionet ECG File</string>
    </property>
   </action>
+  <action name="MainWindow_2">
+   <property name="text">
+    <string>MainWindow</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionLoad_Physionet_ECG_File</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>onLoad()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>229</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>onLoad()</slot>
+ </slots>
 </ui>

@@ -13,8 +13,19 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        MainWindow.cpp
+        MainWindow.cpp \
+    ecg-annotation/signal.cpp \
+    ecg-annotation/fwt.cpp \
+    ecg-annotation/ecgdenoise.cpp \
+    ecg-annotation/ecgannotation.cpp \
+    ecg-annotation/cwt.cpp
 
-HEADERS  += MainWindow.h
+HEADERS  += MainWindow.h \
+    ecg-annotation/signal.h \
+    ecg-annotation/lib.h \
+    ecg-annotation/fwt.h \
+    ecg-annotation/ecgdenoise.h \
+    ecg-annotation/ecgannotation.h \
+    ecg-annotation/cwt.h
 
 FORMS    += MainWindow.ui
