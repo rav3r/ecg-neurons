@@ -6,7 +6,7 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = ecg-neurons
 TEMPLATE = app
@@ -18,7 +18,8 @@ SOURCES += main.cpp\
     ecg-annotation/fwt.cpp \
     ecg-annotation/ecgdenoise.cpp \
     ecg-annotation/ecgannotation.cpp \
-    ecg-annotation/cwt.cpp
+    ecg-annotation/cwt.cpp \
+    qcustomplot/qcustomplot.cpp
 
 HEADERS  += MainWindow.h \
     ecg-annotation/signal.h \
@@ -26,6 +27,7 @@ HEADERS  += MainWindow.h \
     ecg-annotation/fwt.h \
     ecg-annotation/ecgdenoise.h \
     ecg-annotation/ecgannotation.h \
-    ecg-annotation/cwt.h
+    ecg-annotation/cwt.h \
+    qcustomplot/qcustomplot.h
 
 FORMS    += MainWindow.ui
