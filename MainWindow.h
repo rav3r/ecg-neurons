@@ -3,6 +3,11 @@
 
 #include <QMainWindow>
 
+#include <vector>
+#include "fann/fann.h"
+
+class Signal;
+
 namespace Ui {
 class MainWindow;
 }
@@ -17,9 +22,18 @@ public:
 
 public slots:
     void onLoad();
+    void onLearnArrhytmia();
+    void onLearnMyocardial();
+    void onLearnPericarditis();
 
 private:
     Ui::MainWindow *ui;
+
+    bool loadLearningSignals(Signal& reference, Signal& distorted);
+
+    // arrhytmia
+    bool getRDistances(Signal& signal, std::vector<float>& distances);
+    fann *arrhytmiaAnn;
 };
 
 #endif // MAINWINDOW_H

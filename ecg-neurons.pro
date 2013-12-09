@@ -20,13 +20,7 @@ SOURCES += main.cpp\
     ecg-annotation/ecgannotation.cpp \
     ecg-annotation/cwt.cpp \
     qcustomplot/qcustomplot.cpp \
-    fann/floatfann.c \
-    fann/fann_train_data.c \
-    fann/fann_train.c \
-    fann/fann_io.c \
-    fann/fann_error.c \
-    fann/fann_cascade.c \
-    fann/fann.c
+    fann/floatfann.cpp
 
 HEADERS  += MainWindow.h \
     ecg-annotation/signal.h \
