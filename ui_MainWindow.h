@@ -33,6 +33,10 @@ public:
     QAction *actionArrhytmia;
     QAction *actionMyocardial;
     QAction *actionPericarditis;
+    QAction *actionSave_Mycardial_ANN;
+    QAction *actionSave_Pericarditis_ANN;
+    QAction *actionLoad_Myocardial_ANN;
+    QAction *actionLoad_Pericarditis_ANN;
     QWidget *centralWidget;
     QGridLayout *gridLayout;
     QTabWidget *tabWidget;
@@ -51,6 +55,8 @@ public:
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuLearn;
+    QMenu *menuSave;
+    QMenu *menuLoad;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -67,6 +73,14 @@ public:
         actionMyocardial->setObjectName(QStringLiteral("actionMyocardial"));
         actionPericarditis = new QAction(MainWindow);
         actionPericarditis->setObjectName(QStringLiteral("actionPericarditis"));
+        actionSave_Mycardial_ANN = new QAction(MainWindow);
+        actionSave_Mycardial_ANN->setObjectName(QStringLiteral("actionSave_Mycardial_ANN"));
+        actionSave_Pericarditis_ANN = new QAction(MainWindow);
+        actionSave_Pericarditis_ANN->setObjectName(QStringLiteral("actionSave_Pericarditis_ANN"));
+        actionLoad_Myocardial_ANN = new QAction(MainWindow);
+        actionLoad_Myocardial_ANN->setObjectName(QStringLiteral("actionLoad_Myocardial_ANN"));
+        actionLoad_Pericarditis_ANN = new QAction(MainWindow);
+        actionLoad_Pericarditis_ANN->setObjectName(QStringLiteral("actionLoad_Pericarditis_ANN"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         gridLayout = new QGridLayout(centralWidget);
@@ -146,18 +160,32 @@ public:
         menuFile->setObjectName(QStringLiteral("menuFile"));
         menuLearn = new QMenu(menuBar);
         menuLearn->setObjectName(QStringLiteral("menuLearn"));
+        menuSave = new QMenu(menuBar);
+        menuSave->setObjectName(QStringLiteral("menuSave"));
+        menuLoad = new QMenu(menuBar);
+        menuLoad->setObjectName(QStringLiteral("menuLoad"));
         MainWindow->setMenuBar(menuBar);
 
         menuBar->addAction(menuFile->menuAction());
         menuBar->addAction(menuLearn->menuAction());
+        menuBar->addAction(menuSave->menuAction());
+        menuBar->addAction(menuLoad->menuAction());
         menuFile->addAction(actionLoad_Physionet_ECG_File);
         menuLearn->addAction(actionMyocardial);
         menuLearn->addAction(actionPericarditis);
+        menuSave->addAction(actionSave_Mycardial_ANN);
+        menuSave->addAction(actionSave_Pericarditis_ANN);
+        menuLoad->addAction(actionLoad_Myocardial_ANN);
+        menuLoad->addAction(actionLoad_Pericarditis_ANN);
 
         retranslateUi(MainWindow);
         QObject::connect(actionLoad_Physionet_ECG_File, SIGNAL(triggered()), MainWindow, SLOT(onLoad()));
         QObject::connect(actionMyocardial, SIGNAL(triggered()), MainWindow, SLOT(onLearnMyocardial()));
         QObject::connect(actionPericarditis, SIGNAL(triggered()), MainWindow, SLOT(onLearnPericarditis()));
+        QObject::connect(actionSave_Mycardial_ANN, SIGNAL(triggered()), MainWindow, SLOT(onSaveMyocardialANN()));
+        QObject::connect(actionLoad_Pericarditis_ANN, SIGNAL(triggered()), MainWindow, SLOT(onLoadPericarditisANN()));
+        QObject::connect(actionLoad_Myocardial_ANN, SIGNAL(triggered()), MainWindow, SLOT(onLoadMyocardialANN()));
+        QObject::connect(actionSave_Pericarditis_ANN, SIGNAL(triggered()), MainWindow, SLOT(onSavePericarditisANN()));
 
         tabWidget->setCurrentIndex(0);
 
@@ -173,11 +201,17 @@ public:
         actionArrhytmia->setText(QApplication::translate("MainWindow", "Arrhytmia", 0));
         actionMyocardial->setText(QApplication::translate("MainWindow", "Myocardial", 0));
         actionPericarditis->setText(QApplication::translate("MainWindow", "Pericarditis", 0));
+        actionSave_Mycardial_ANN->setText(QApplication::translate("MainWindow", "Save Mycardial ANN", 0));
+        actionSave_Pericarditis_ANN->setText(QApplication::translate("MainWindow", "Save Pericarditis ANN", 0));
+        actionLoad_Myocardial_ANN->setText(QApplication::translate("MainWindow", "Load Myocardial ANN", 0));
+        actionLoad_Pericarditis_ANN->setText(QApplication::translate("MainWindow", "Load Pericarditis ANN", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab), QApplication::translate("MainWindow", "Arrhytmia", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_2), QApplication::translate("MainWindow", "Myocardial", 0));
         tabWidget->setTabText(tabWidget->indexOf(tab_3), QApplication::translate("MainWindow", "Pericarditis", 0));
         menuFile->setTitle(QApplication::translate("MainWindow", "File", 0));
         menuLearn->setTitle(QApplication::translate("MainWindow", "Learn", 0));
+        menuSave->setTitle(QApplication::translate("MainWindow", "Save", 0));
+        menuLoad->setTitle(QApplication::translate("MainWindow", "Load", 0));
     } // retranslateUi
 
 };

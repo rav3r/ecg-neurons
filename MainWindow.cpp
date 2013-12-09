@@ -36,6 +36,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->pPlot->setInteraction(QCP::iRangeDrag, true);
     ui->pPlot->setInteraction(QCP::iRangeZoom, true);
+
+    pAnn = 0;
+    mAnn = 0;
+
+    ui->tabWidget->setTabEnabled(1, false);
+    ui->tabWidget->setTabEnabled(2, false);
 }
 
 MainWindow::~MainWindow()
@@ -159,7 +165,7 @@ void MainWindow::fillArrhytmiaPlot(int** ANN, QCustomPlot *plot, EcgAnnotation& 
 
                 QCPItemText *text = new QCPItemText(plot);
                 plot->addItem(text);
-                text->setText(QString::number(msec - lastRTime, 'g', 2)+"s");
+                text->setText(QString::number(msec - lastRTime, 'f', 2)+"s");
                 text->position->setCoords((lastRTime+msec)/2, 6.3);
 
                 items.push_back(text);
@@ -197,10 +203,11 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
     plot->xAxis->setRange(0, 2);
     plot->yAxis->setRange(-4, 4);
 
-    float lastN, lastQ;
+    float lastN, lastQ, lastR;
+    bool foundN=false, foundQ=false;
 
     int currXPos = 0;
-    float lastQTime, lastNTime;
+    float lastQTime, lastNTime, lastRTime;
 
     int annNum = ann.GetEcgAnnotationSize();
     for (int i = 0; i < annNum; i++)
@@ -227,6 +234,7 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
         {
             if(lastTTime > 0)
             {
+
                 int firstXPos = currXPos;
                 while(currXPos < x.size()-1 && x[currXPos] < msec)
                     currXPos++;
@@ -242,7 +250,26 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
                 if(f < 0) f = 0;
                 if(f > 1) f = 1;
 
-                QColor color = QColor(255, 255*(1-f), 255*(1-f), 128);
+                float qr_perc = (lastN - lastQ) / (lastR - lastQ);
+
+                float alpha = 0;
+
+                if(mAnn != 0)
+                {
+                    fann_type *calc_out;
+                    fann_type input[3];
+
+                    input[0] = mid;
+                    input[1] = lastRTime - lastQTime;
+                    input[2] = qr_perc;
+                    calc_out = fann_run(mAnn, input);
+                    alpha = (calc_out[0] + 1)/2.0f;
+
+                    if(alpha > 1) alpha = 1;
+                    if(alpha < 0) alpha = 0;
+                }
+
+                QColor color = QColor(255, 0, 0, 128*alpha);
 
                 QBrush brush;
                 brush.setStyle(Qt::SolidPattern);
@@ -251,6 +278,19 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
                 pen.setColor(color);
 
                 QCPItemRect* rect = new QCPItemRect(plot);
+                rect->topLeft->setCoords(lastNTime, 4);
+                rect->bottomRight->setCoords(msec, -4);
+                rect->setBrush(brush);
+                QPen nonePen;
+                nonePen.setColor(QColor(255,255,255,0));
+                rect->setPen(nonePen);
+                plot->addItem(rect);
+
+                items.push_back(rect);
+
+
+                brush.setColor(QColor(255,255,255,0));
+                rect = new QCPItemRect(plot);
                 rect->topLeft->setCoords(lastTTime, 4);
                 rect->bottomRight->setCoords(msec, -4);
                 rect->setBrush(brush);
@@ -260,7 +300,7 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
 
                 QCPItemText *text = new QCPItemText(plot);
                 plot->addItem(text);
-                text->setText(QString::number(mid, 'g', 2));
+                text->setText(QString::number(mid, 'f', 2));
                 text->position->setCoords((lastTTime+msec)/2, 4.3);
 
                 items.push_back(text);
@@ -290,13 +330,24 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
 
             lastQ = y[currXPos];
             lastQTime = msec;
+
+            std::cout << "LAST Q: "<<lastQ<<"\n";
         }
         if(anncodes[type][0] == L'R')
         {
             while(currXPos < x.size()-1 && x[currXPos] < msec)
                 currXPos++;
 
-            float lastR = y[currXPos];
+            lastR = y[currXPos];
+            lastRTime = msec;
+
+            if(lastNTime < lastQTime && lastQTime < lastRTime && lastRTime - lastNTime < 1.0f)
+            {
+
+
+            float qr_perc = (lastN - lastQ) / (lastR - lastQ);
+
+            //std::cout <<lastN<<" "<<lastQ<<" "<<lastR<<" "<<  qr_perc<<"\n";
 
             QBrush brush;
             brush.setStyle(Qt::SolidPattern);
@@ -313,26 +364,25 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
 
             QCPItemText *text = new QCPItemText(plot);
             plot->addItem(text);
-            text->setText(QString::number(msec - lastQTime, 'g', 2)+"s");
-            text->position->setCoords((lastQTime+msec)/2, -4.3);
+            text->setText(QString::number(msec - lastQTime, 'f', 2)+"s");
+            text->position->setCoords((lastNTime+msec)/2, -4.3);
 
             items.push_back(text);
 
-            float val = (lastN - lastQ) / (lastR - lastN);
-
             text = new QCPItemText(plot);
             plot->addItem(text);
-            text->setText(QString::number(val*100, 'g', 2)+"%");
-            text->position->setCoords((lastQTime+msec)/2, 4.3);
+            text->setText(QString::number(qr_perc*100, 'f', 2)+"%");
+            text->position->setCoords((lastNTime+msec)/2, 4.3);
 
             items.push_back(text);
 
             text = new QCPItemText(plot);
             plot->addItem(text);
             text->setText("Q");
-            text->position->setCoords((lastQTime+msec)/2, 5);
+            text->position->setCoords((lastNTime+msec)/2, 5);
 
             items.push_back(text);
+            }
         }
     }
 
@@ -406,9 +456,40 @@ void MainWindow::fillPericarditisPlot(int** ANN, QCustomPlot *plot, EcgAnnotatio
 
             if(lastP < lastQ && lastQ < lastS && lastS < lastT && x[lastT] - x[lastP] < 0.5f)
             {
+                float midPQ = 0;
+                for(int i=lastP; i<=lastQ; i++)
+                {
+                    midPQ += y[i];
+                }
+                midPQ /= (lastQ - lastP)+1;
+
+                float midST = 0;
+                for(int i=lastS; i<=lastT; i++)
+                {
+                    midST += y[i];
+                }
+                midST /= (lastT - lastS)+1;
+
+                float alpha = 0;
+
+                if(pAnn != 0)
+                {
+                    fann_type *calc_out;
+                    fann_type input[1];
+
+                    input[0] = midST - midPQ;
+                    calc_out = fann_run(pAnn, input);
+                    alpha = (calc_out[0] + 1)/2.0f;
+
+                    if(alpha > 1) alpha = 1;
+                    if(alpha < 0) alpha = 0;
+
+                    std::cout <<input[0] << " -- A:"<< alpha <<"\n";
+                }
+
                 QBrush brush;
                 brush.setStyle(Qt::SolidPattern);
-                brush.setColor(QColor(255,128,128,120));
+                brush.setColor(QColor(255,0,0, 200*alpha));
 
                 QPen pen;
                 pen.setColor(brush.color());
@@ -418,6 +499,7 @@ void MainWindow::fillPericarditisPlot(int** ANN, QCustomPlot *plot, EcgAnnotatio
                 rect->bottomRight->setCoords(x[lastT], -4);
                 rect->setBrush(brush);
                 plot->addItem(rect);
+
                 items.push_back(rect);
 
                 rect->setPen(pen);
@@ -429,6 +511,7 @@ void MainWindow::fillPericarditisPlot(int** ANN, QCustomPlot *plot, EcgAnnotatio
                 rect->bottomRight->setCoords(x[lastQ], -3.5);
                 rect->setBrush(brush);
                 plot->addItem(rect);
+
                 items.push_back(rect);
 
                 rect = new QCPItemRect(plot);
@@ -436,6 +519,7 @@ void MainWindow::fillPericarditisPlot(int** ANN, QCustomPlot *plot, EcgAnnotatio
                 rect->bottomRight->setCoords(x[lastT], -3.5);
                 rect->setBrush(brush);
                 plot->addItem(rect);
+
                 items.push_back(rect);
 
                 QCPItemText *text = new QCPItemText(plot);
@@ -452,37 +536,23 @@ void MainWindow::fillPericarditisPlot(int** ANN, QCustomPlot *plot, EcgAnnotatio
 
                 items.push_back(text);
 
-                float midPQ = 0;
-                for(int i=lastP; i<=lastQ; i++)
-                {
-                    midPQ += y[i];
-                }
-                midPQ /= (lastQ - lastP)+1;
-
-                float midST = 0;
-                for(int i=lastS; i<=lastT; i++)
-                {
-                    midST += y[i];
-                }
-                midST /= (lastT - lastS)+1;
-
                 text = new QCPItemText(plot);
                 plot->addItem(text);
-                text->setText(QString::number(midPQ, 'g', 2));
+                text->setText(QString::number(midPQ, 'f', 2));
                 text->position->setCoords((x[lastP]+x[lastQ])/2, 4.3);
 
                 items.push_back(text);
 
                 text = new QCPItemText(plot);
                 plot->addItem(text);
-                text->setText(QString::number(midST, 'g', 2));
+                text->setText(QString::number(midST, 'f', 2));
                 text->position->setCoords((x[lastS]+x[lastT])/2, 4.3);
 
                 items.push_back(text);
 
                 text = new QCPItemText(plot);
                 plot->addItem(text);
-                text->setText(QString("ST - PQ = ")+QString::number(midST - midPQ, 'g', 2));
+                text->setText(QString("ST - PQ = ")+QString::number(midST - midPQ, 'f', 2));
                 text->position->setCoords((x[lastP]+x[lastT])/2, 5);
 
                 items.push_back(text);
@@ -632,8 +702,138 @@ bool MainWindow::getRDistances(Signal& signal, std::vector<float>& distances)
 
 void MainWindow::onLearnMyocardial()
 {
+    QString trainFileName = QFileDialog::getOpenFileName(this, tr("Open training file"),
+                                                    "", tr("Training file (*.data)"));
+
+    if(trainFileName.isEmpty())
+        return;
+
+    if(mAnn != 0)
+         fann_destroy(mAnn);
+
+    const unsigned int num_input = 3;
+    const unsigned int num_output = 1;
+    const unsigned int num_layers = 3;
+    const unsigned int num_neurons_hidden = 5;
+    const float desired_error = 0.001f;
+    const unsigned int max_epochs = 50000;
+    const unsigned int epochs_between_reports = 0;
+
+     mAnn= fann_create_standard(num_layers, num_input,
+        num_neurons_hidden, num_output);
+
+     fann_set_activation_function_hidden(mAnn, FANN_SIGMOID_SYMMETRIC);
+     fann_set_activation_function_output(mAnn, FANN_SIGMOID_SYMMETRIC);
+
+     QByteArray ba = trainFileName.toLocal8Bit();
+
+    fann_train_on_file(mAnn, ba.data(), max_epochs,
+        epochs_between_reports, desired_error);
+
+    QMessageBox::information(this, "Training Complete", QString("Training error = ") + QString::number(fann_get_MSE(mAnn)));
+
+    ui->tabWidget->setTabEnabled(1, true);
 }
 
 void MainWindow::onLearnPericarditis()
 {
+    QString trainFileName = QFileDialog::getOpenFileName(this, tr("Open training file"),
+                                                    "", tr("Training file (*.data)"));
+
+    if(trainFileName.isEmpty())
+        return;
+
+    if(pAnn != 0)
+         fann_destroy(pAnn);
+
+    const unsigned int num_input = 1;
+    const unsigned int num_output = 1;
+    const unsigned int num_layers = 3;
+    const unsigned int num_neurons_hidden = 4;
+    const float desired_error = 0.001f;
+    const unsigned int max_epochs = 50000;
+    const unsigned int epochs_between_reports = 0;
+
+     pAnn= fann_create_standard(num_layers, num_input,
+        num_neurons_hidden, num_output);
+
+     fann_set_activation_function_hidden(pAnn, FANN_SIGMOID_SYMMETRIC);
+     fann_set_activation_function_output(pAnn, FANN_SIGMOID_SYMMETRIC);
+
+     QByteArray ba = trainFileName.toLocal8Bit();
+
+     std::cout << ba.data();
+
+    fann_train_on_file(pAnn, ba.data(), max_epochs,
+        epochs_between_reports, desired_error);
+
+    QMessageBox::information(this, "Training Complete", QString("Training error = ") + QString::number(fann_get_MSE(pAnn)));
+
+    ui->tabWidget->setTabEnabled(2, true);
+}
+
+void MainWindow::onLoadMyocardialANN()
+{
+    QString filename = QFileDialog::getOpenFileName(this, tr("Open ann file"),
+                                                    "", tr("ANN file (*.net)"));
+
+    if(filename.isEmpty())
+        return;
+
+    if(mAnn != 0)
+         fann_destroy(mAnn);
+
+   QByteArray ba = filename.toLocal8Bit();
+
+    mAnn =  fann_create_from_file(ba.data());
+
+    ui->tabWidget->setTabEnabled(1, true);
+}
+
+void MainWindow::onSaveMyocardialANN()
+{
+    if(mAnn == 0)
+        return;
+
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save ann file"),
+                                                    "", tr("ANN file (*.net)"));
+    if(filename.isEmpty())
+        return;
+
+    QByteArray ba = filename.toLocal8Bit();
+
+    fann_save(mAnn, ba.data());
+}
+
+void MainWindow::onLoadPericarditisANN()
+{
+    QString filename = QFileDialog::getOpenFileName(this, tr("Open ann file"),
+                                                    "", tr("ANN file (*.net)"));
+
+    if(filename.isEmpty())
+        return;
+
+    if(pAnn != 0)
+         fann_destroy(pAnn);
+
+   QByteArray ba = filename.toLocal8Bit();
+
+    pAnn =  fann_create_from_file(ba.data());
+
+    ui->tabWidget->setTabEnabled(2, true);
+}
+
+void MainWindow::onSavePericarditisANN()
+{
+    if(pAnn == 0)
+        return;
+
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save ann file"),
+                                                    "", tr("ANN file (*.net)"));
+    if(filename.isEmpty())
+        return;
+
+    QByteArray ba = filename.toLocal8Bit();
+
+    fann_save(pAnn, ba.data());
 }

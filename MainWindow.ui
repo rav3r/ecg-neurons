@@ -101,8 +101,24 @@
     <addaction name="actionMyocardial"/>
     <addaction name="actionPericarditis"/>
    </widget>
+   <widget class="QMenu" name="menuSave">
+    <property name="title">
+     <string>Save</string>
+    </property>
+    <addaction name="actionSave_Mycardial_ANN"/>
+    <addaction name="actionSave_Pericarditis_ANN"/>
+   </widget>
+   <widget class="QMenu" name="menuLoad">
+    <property name="title">
+     <string>Load</string>
+    </property>
+    <addaction name="actionLoad_Myocardial_ANN"/>
+    <addaction name="actionLoad_Pericarditis_ANN"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuLearn"/>
+   <addaction name="menuSave"/>
+   <addaction name="menuLoad"/>
   </widget>
   <action name="actionLoad_Physionet_ECG_File">
    <property name="text">
@@ -127,6 +143,26 @@
   <action name="actionPericarditis">
    <property name="text">
     <string>Pericarditis</string>
+   </property>
+  </action>
+  <action name="actionSave_Mycardial_ANN">
+   <property name="text">
+    <string>Save Mycardial ANN</string>
+   </property>
+  </action>
+  <action name="actionSave_Pericarditis_ANN">
+   <property name="text">
+    <string>Save Pericarditis ANN</string>
+   </property>
+  </action>
+  <action name="actionLoad_Myocardial_ANN">
+   <property name="text">
+    <string>Load Myocardial ANN</string>
+   </property>
+  </action>
+  <action name="actionLoad_Pericarditis_ANN">
+   <property name="text">
+    <string>Load Pericarditis ANN</string>
    </property>
   </action>
  </widget>
@@ -189,11 +225,79 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionSave_Mycardial_ANN</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>onSaveMyocardialANN()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>299</x>
+     <y>229</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>229</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionLoad_Pericarditis_ANN</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>onLoadPericarditisANN()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>229</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionLoad_Myocardial_ANN</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>onLoadMyocardialANN()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>229</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSave_Pericarditis_ANN</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>onSavePericarditisANN()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>229</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onLoad()</slot>
   <slot>onLearnArrhytmia()</slot>
   <slot>onLearnMyocardial()</slot>
   <slot>onLearnPericarditis()</slot>
+  <slot>onLoadMyocardialANN()</slot>
+  <slot>onSaveMyocardialANN()</slot>
+  <slot>onLoadPericarditisANN()</slot>
+  <slot>onSavePericarditisANN()</slot>
  </slots>
 </ui>

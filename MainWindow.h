@@ -27,6 +27,11 @@ public slots:
     void onLearnMyocardial();
     void onLearnPericarditis();
 
+    void onLoadMyocardialANN();
+    void onSaveMyocardialANN();
+    void onLoadPericarditisANN();
+    void onSavePericarditisANN();
+
 private:
     Ui::MainWindow *ui;
 
@@ -38,9 +43,11 @@ private:
 
     // myocardial
     void fillMyocardialPlot(int** ANN, QCustomPlot* plot, EcgAnnotation& ann, QVector<double>& x, QVector<double>& y, double sr);
+    struct fann *mAnn;
 
     // pericarditis
     void fillPericarditisPlot(int** ANN, QCustomPlot* plot, EcgAnnotation& ann, QVector<double>& x, QVector<double>& y, double sr);
+    struct fann *pAnn;
 };
 
 #endif // MAINWINDOW_H
