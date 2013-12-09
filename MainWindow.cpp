@@ -26,12 +26,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    arrhytmiaAnn = 0;
-
     ui->setupUi(this);
 
     ui->plot->setInteraction(QCP::iRangeDrag, true);
     ui->plot->setInteraction(QCP::iRangeZoom, true);
+
+    ui->mPlot->setInteraction(QCP::iRangeDrag, true);
+    ui->mPlot->setInteraction(QCP::iRangeZoom, true);
 }
 
 MainWindow::~MainWindow()
@@ -49,10 +50,6 @@ void MainWindow::onLoad()
 
     Signal signal;
 
-    float lastRTime = -1;
-
-    static std::vector<QCPAbstractItem*> items;
-
     if(signal.ReadFile(fileName.toStdWString().c_str()))
     {
         int dataSize = signal.GetLength();
@@ -67,21 +64,6 @@ void MainWindow::onLoad()
             x[i] = i * msec / dataSize;
             y[i] = data[i];
         }
-        ui->plot->clearGraphs();
-        ui->plot->addGraph();
-        for(int i=0; i<items.size(); i++)
-        {
-            delete items[i];
-        }
-        items.clear();
-
-        ui->plot->graph(0)->setData(x, y);
-
-        ui->plot->xAxis->setLabel("time (s)");
-        ui->plot->yAxis->setLabel("y");
-
-        ui->plot->xAxis->setRange(0, 2);
-        ui->plot->yAxis->setRange(-4, 4);
 
         EcgAnnotation ann;
         int** qrsAnn = ann.GetQRS(data, dataSize, sr, L"filters");
@@ -92,64 +74,8 @@ void MainWindow::onLoad()
                                 qrsAnn, ann.GetQrsNumber());
             if (ANN)
             {
-                QPen pen;
-                pen.setColor(QColor(255,0,0));
-
-                int annNum = ann.GetEcgAnnotationSize();
-                for (int i = 0; i < annNum; i++)
-                {
-                    int smpl = ANN[i][0];
-                    int type = ANN[i][1];
-
-                    float msec = float(((double)smpl / sr));
-
-                    if(anncodes[type][0] == L'R')
-                    {
-                        if(lastRTime > 0)
-                        {
-                            float time = 60.0f/(msec - lastRTime);
-                            bool blue = false;
-
-                            time -= 75;
-                            time /= 20.0f;
-                            if(time < 0) { time = -time; blue = true; }
-                            if(time > 1) time = 1;
-
-                            std::cout << time << "->" << (msec - lastRTime) << "\n";
-
-                            QColor color = QColor(!blue ? 255 : 255*(1-time), 255*(1-time), blue ? 255 : 255*(1-time), 128);
-
-                            QBrush brush;
-                            brush.setStyle(Qt::SolidPattern);
-                            brush.setColor(color);
-
-                            QCPItemRect* rect = new QCPItemRect(ui->plot);
-                            rect->topLeft->setCoords(lastRTime, 4);
-                            rect->bottomRight->setCoords(msec, -4);
-                            rect->setBrush(brush);
-
-                            items.push_back(rect);
-
-                            /*QCPItemLine *arrow = new QCPItemLine(ui->plot);
-                            ui->plot->addItem(arrow);
-                            arrow->start->setCoords(lastRTime, 6);
-                            arrow->end->setCoords(msec, 6);
-                            arrow->setHead(QCPLineEnding::esLineArrow);
-                            arrow->setTail(QCPLineEnding::esLineArrow);
-
-                            items.push_back(arrow);*/
-
-                            QCPItemText *text = new QCPItemText(ui->plot);
-                            ui->plot->addItem(text);
-                            text->setText(QString::number(msec - lastRTime, 'g', 2)+"s");
-                            text->position->setCoords((lastRTime+msec)/2, 6.3);
-
-                            items.push_back(text);
-                        }
-
-                        lastRTime = msec;
-                    }
-                }
+                fillArrhytmiaPlot(ANN, ui->plot, ann, x, y, signal.GetSR());
+                fillMyocardialPlot(ANN, ui->mPlot, ann, x, y, signal.GetSR());
             }
             else
             {
@@ -166,6 +92,241 @@ void MainWindow::onLoad()
     {
          QMessageBox::warning(this, "Warning", "Failed to load file " + fileName);
     }
+}
+
+void MainWindow::fillArrhytmiaPlot(int** ANN, QCustomPlot *plot, EcgAnnotation& ann, QVector<double> &x, QVector<double> &y, double sr)
+{
+    QPen pen;
+    pen.setColor(QColor(255,0,0));
+    float lastRTime = -1;
+
+    static std::vector<QCPAbstractItem*> items;
+
+    for(int i=0; i<items.size(); i++)
+    {
+        delete items[i];
+    }
+    items.clear();
+
+    plot->clearGraphs();
+    plot->addGraph();
+
+    plot->graph(0)->setData(x, y);
+
+    plot->xAxis->setLabel("time (s)");
+    plot->yAxis->setLabel("y");
+
+    plot->xAxis->setRange(0, 2);
+    plot->yAxis->setRange(-4, 4);
+
+    int annNum = ann.GetEcgAnnotationSize();
+    for (int i = 0; i < annNum; i++)
+    {
+        int smpl = ANN[i][0];
+        int type = ANN[i][1];
+
+        float msec = float(((double)smpl / sr));
+
+        if(anncodes[type][0] == L'R')
+        {
+            if(lastRTime > 0)
+            {
+                float time = 60.0f/(msec - lastRTime);
+                bool blue = false;
+
+                time -= 75;
+                time /= 20.0f;
+                if(time < 0) { time = -time; blue = true; }
+                if(time > 1) time = 1;
+
+                QColor color = QColor(!blue ? 255 : 255*(1-time), 255*(1-time), blue ? 255 : 255*(1-time), 128);
+
+                QBrush brush;
+                brush.setStyle(Qt::SolidPattern);
+                brush.setColor(color);
+
+                QCPItemRect* rect = new QCPItemRect(plot);
+                plot->addItem(rect);
+                rect->topLeft->setCoords(lastRTime, 4);
+                rect->bottomRight->setCoords(msec, -4);
+                rect->setBrush(brush);
+
+                items.push_back(rect);
+
+                QCPItemText *text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText(QString::number(msec - lastRTime, 'g', 2)+"s");
+                text->position->setCoords((lastRTime+msec)/2, 6.3);
+
+                items.push_back(text);
+            }
+
+            lastRTime = msec;
+        }
+    }
+
+    plot->replot();
+}
+
+void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation& ann, QVector<double> &x, QVector<double> &y, double sr)
+{
+    QPen pen;
+    pen.setColor(QColor(255,0,0));
+    float lastTTime = -1;
+
+    static std::vector<QCPAbstractItem*> items;
+
+    for(int i=0; i<items.size(); i++)
+    {
+        delete items[i];
+    }
+    items.clear();
+
+    plot->clearGraphs();
+    plot->addGraph();
+
+    plot->graph(0)->setData(x, y);
+
+    plot->xAxis->setLabel("time (s)");
+    plot->yAxis->setLabel("y");
+
+    plot->xAxis->setRange(0, 2);
+    plot->yAxis->setRange(-4, 4);
+
+    float lastN, lastQ;
+
+    int currXPos = 0;
+    float lastQTime, lastNTime;
+
+    int annNum = ann.GetEcgAnnotationSize();
+    for (int i = 0; i < annNum; i++)
+    {
+        int smpl = ANN[i][0];
+        int type = ANN[i][1];
+
+        float msec = float(((double)smpl / sr));
+
+        if(anncodes[type][0] == L'(' && anncodes[type][1] == L't')
+        {
+            lastTTime = msec;
+
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+        }
+        if(anncodes[type][0] == L't' && anncodes[type][1] == L')')
+        {
+            if(lastTTime > 0)
+            {
+                int firstXPos = currXPos;
+                while(currXPos < x.size()-1 && x[currXPos] < msec)
+                    currXPos++;
+
+                float first = y[firstXPos];
+                float second = y[currXPos];
+
+                float mid = y[(firstXPos + currXPos)/2];
+
+                mid -= (first+second)/2;
+
+                float f = -mid/0.2f;
+                if(f < 0) f = 0;
+                if(f > 1) f = 1;
+
+                QColor color = QColor(255, 255*(1-f), 255*(1-f), 128);
+
+                QBrush brush;
+                brush.setStyle(Qt::SolidPattern);
+                brush.setColor(color);
+                QPen pen;
+                pen.setColor(color);
+
+                QCPItemRect* rect = new QCPItemRect(plot);
+                rect->topLeft->setCoords(lastTTime, 4);
+                rect->bottomRight->setCoords(msec, -4);
+                rect->setBrush(brush);
+                plot->addItem(rect);
+
+                items.push_back(rect);
+
+                QCPItemText *text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText(QString::number(mid, 'g', 2));
+                text->position->setCoords((lastTTime+msec)/2, 4.3);
+
+                items.push_back(text);
+
+                text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText("T");
+                text->position->setCoords((lastTTime+msec)/2, 5);
+
+                items.push_back(text);
+            }
+
+            lastTTime = -1;
+        }
+        if(anncodes[type][0] == L'N')
+        {
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+
+            lastN = y[currXPos];
+            lastNTime = msec;
+        }
+        if(anncodes[type][0] == L'Q')
+        {
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+
+            lastQ = y[currXPos];
+            lastQTime = msec;
+        }
+        if(anncodes[type][0] == L'R')
+        {
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+
+            float lastR = y[currXPos];
+
+            QBrush brush;
+            brush.setStyle(Qt::SolidPattern);
+            brush.setColor(QColor(255,255,255,20));
+
+
+            QCPItemRect* rect = new QCPItemRect(plot);
+            rect->topLeft->setCoords(lastNTime, 4);
+            rect->bottomRight->setCoords(msec, -4);
+            rect->setBrush(brush);
+            plot->addItem(rect);
+
+            items.push_back(rect);
+
+            QCPItemText *text = new QCPItemText(plot);
+            plot->addItem(text);
+            text->setText(QString::number(msec - lastQTime, 'g', 2)+"s");
+            text->position->setCoords((lastQTime+msec)/2, -4.3);
+
+            items.push_back(text);
+
+            float val = (lastN - lastQ) / (lastR - lastN);
+
+            text = new QCPItemText(plot);
+            plot->addItem(text);
+            text->setText(QString::number(val*100, 'g', 2)+"%");
+            text->position->setCoords((lastQTime+msec)/2, 4.3);
+
+            items.push_back(text);
+
+            text = new QCPItemText(plot);
+            plot->addItem(text);
+            text->setText("Q");
+            text->position->setCoords((lastQTime+msec)/2, 5);
+
+            items.push_back(text);
+        }
+    }
+
+    plot->replot();
 }
 
 bool MainWindow::loadLearningSignals(Signal& referenceSignal, Signal& distortedSignal)
@@ -251,7 +412,7 @@ bool MainWindow::getRDistances(Signal& signal, std::vector<float>& distances)
     return true;
 }
 
-void MainWindow::onLearnArrhytmia()
+/*void MainWindow::onLearnArrhytmia()
 {
     Signal referenceSignal, distortedSignal;
     if(!loadLearningSignals(referenceSignal, distortedSignal))
@@ -303,7 +464,7 @@ void MainWindow::onLearnArrhytmia()
     }
 
     fann_train_on_data(arrhytmiaAnn, &data, max_epochs, epochs_between_reports, desired_error);
-}
+}*/
 
 void MainWindow::onLearnMyocardial()
 {

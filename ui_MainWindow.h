@@ -43,7 +43,7 @@ public:
     QWidget *tab_2;
     QGridLayout *gridLayout_3;
     QVBoxLayout *verticalLayout_3;
-    QCustomPlot *widget;
+    QCustomPlot *mPlot;
     QWidget *tab_3;
     QGridLayout *gridLayout_4;
     QVBoxLayout *verticalLayout_4;
@@ -108,10 +108,10 @@ public:
         verticalLayout_3 = new QVBoxLayout();
         verticalLayout_3->setSpacing(6);
         verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
-        widget = new QCustomPlot(tab_2);
-        widget->setObjectName(QStringLiteral("widget"));
+        mPlot = new QCustomPlot(tab_2);
+        mPlot->setObjectName(QStringLiteral("mPlot"));
 
-        verticalLayout_3->addWidget(widget);
+        verticalLayout_3->addWidget(mPlot);
 
 
         gridLayout_3->addLayout(verticalLayout_3, 0, 0, 1, 1);
@@ -151,17 +151,15 @@ public:
         menuBar->addAction(menuFile->menuAction());
         menuBar->addAction(menuLearn->menuAction());
         menuFile->addAction(actionLoad_Physionet_ECG_File);
-        menuLearn->addAction(actionArrhytmia);
         menuLearn->addAction(actionMyocardial);
         menuLearn->addAction(actionPericarditis);
 
         retranslateUi(MainWindow);
         QObject::connect(actionLoad_Physionet_ECG_File, SIGNAL(triggered()), MainWindow, SLOT(onLoad()));
-        QObject::connect(actionArrhytmia, SIGNAL(triggered()), MainWindow, SLOT(onLearnArrhytmia()));
         QObject::connect(actionMyocardial, SIGNAL(triggered()), MainWindow, SLOT(onLearnMyocardial()));
         QObject::connect(actionPericarditis, SIGNAL(triggered()), MainWindow, SLOT(onLearnPericarditis()));
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);

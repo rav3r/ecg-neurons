@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -55,7 +55,7 @@
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QCustomPlot" name="widget" native="true"/>
+           <widget class="QCustomPlot" name="mPlot" native="true"/>
           </item>
          </layout>
         </item>
@@ -98,7 +98,6 @@
     <property name="title">
      <string>Learn</string>
     </property>
-    <addaction name="actionArrhytmia"/>
     <addaction name="actionMyocardial"/>
     <addaction name="actionPericarditis"/>
    </widget>
@@ -147,22 +146,6 @@
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>onLoad()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>299</x>
-     <y>229</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionArrhytmia</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>onLearnArrhytmia()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

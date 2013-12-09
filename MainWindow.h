@@ -7,6 +7,8 @@
 #include "fann/fann.h"
 
 class Signal;
+class QCustomPlot;
+class EcgAnnotation;
 
 namespace Ui {
 class MainWindow;
@@ -22,7 +24,6 @@ public:
 
 public slots:
     void onLoad();
-    void onLearnArrhytmia();
     void onLearnMyocardial();
     void onLearnPericarditis();
 
@@ -33,7 +34,10 @@ private:
 
     // arrhytmia
     bool getRDistances(Signal& signal, std::vector<float>& distances);
-    fann *arrhytmiaAnn;
+    void fillArrhytmiaPlot(int** ANN, QCustomPlot* plot, EcgAnnotation& ann, QVector<double>& x, QVector<double>& y, double sr);
+
+    // myocardial
+    void fillMyocardialPlot(int** ANN, QCustomPlot* plot, EcgAnnotation& ann, QVector<double>& x, QVector<double>& y, double sr);
 };
 
 #endif // MAINWINDOW_H
