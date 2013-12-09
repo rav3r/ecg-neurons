@@ -33,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->mPlot->setInteraction(QCP::iRangeDrag, true);
     ui->mPlot->setInteraction(QCP::iRangeZoom, true);
+
+    ui->pPlot->setInteraction(QCP::iRangeDrag, true);
+    ui->pPlot->setInteraction(QCP::iRangeZoom, true);
 }
 
 MainWindow::~MainWindow()
@@ -76,6 +79,7 @@ void MainWindow::onLoad()
             {
                 fillArrhytmiaPlot(ANN, ui->plot, ann, x, y, signal.GetSR());
                 fillMyocardialPlot(ANN, ui->mPlot, ann, x, y, signal.GetSR());
+                fillPericarditisPlot(ANN, ui->pPlot, ann, x, y, signal.GetSR());
             }
             else
             {
@@ -206,6 +210,12 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
 
         float msec = float(((double)smpl / sr));
 
+        /*
+        QCPItemText *text = new QCPItemText(plot);
+        plot->addItem(text);
+        text->setText(QString::fromWCharArray(anncodes[type]));
+        text->position->setCoords(msec, 7.3);*/
+
         if(anncodes[type][0] == L'(' && anncodes[type][1] == L't')
         {
             lastTTime = msec;
@@ -323,6 +333,160 @@ void MainWindow::fillMyocardialPlot(int** ANN, QCustomPlot *plot, EcgAnnotation&
             text->position->setCoords((lastQTime+msec)/2, 5);
 
             items.push_back(text);
+        }
+    }
+
+    plot->replot();
+}
+
+void MainWindow::fillPericarditisPlot(int** ANN, QCustomPlot *plot, EcgAnnotation& ann, QVector<double> &x, QVector<double> &y, double sr)
+{
+    QPen pen;
+    pen.setColor(QColor(255,0,0));
+
+    static std::vector<QCPAbstractItem*> items;
+
+    for(int i=0; i<items.size(); i++)
+    {
+        delete items[i];
+    }
+    items.clear();
+
+    plot->clearGraphs();
+    plot->addGraph();
+
+    plot->graph(0)->setData(x, y);
+
+    plot->xAxis->setLabel("time (s)");
+    plot->yAxis->setLabel("y");
+
+    plot->xAxis->setRange(0, 2);
+    plot->yAxis->setRange(-4, 4);
+
+    int lastP = 0, lastQ = 0;
+    int lastS = 0;
+
+    int currXPos = 0;
+
+    int annNum = ann.GetEcgAnnotationSize();
+    for (int i = 0; i < annNum; i++)
+    {
+        int smpl = ANN[i][0];
+        int type = ANN[i][1];
+
+        float msec = float(((double)smpl / sr));
+
+        if(anncodes[type][0] == L'p' && anncodes[type][1] == L')')
+        {
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+
+            lastP = currXPos;
+        }
+        if(anncodes[type][0] == L'N')
+        {
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+
+            lastQ = currXPos;
+        }
+        if(anncodes[type][0] == L')')
+        {
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+
+            lastS = currXPos;
+        }
+        if(anncodes[type][0] == L'(' && anncodes[type][1] == L't')
+        {
+            while(currXPos < x.size()-1 && x[currXPos] < msec)
+                currXPos++;
+
+            int lastT = currXPos;
+
+            if(lastP < lastQ && lastQ < lastS && lastS < lastT && x[lastT] - x[lastP] < 0.5f)
+            {
+                QBrush brush;
+                brush.setStyle(Qt::SolidPattern);
+                brush.setColor(QColor(255,128,128,120));
+
+                QPen pen;
+                pen.setColor(brush.color());
+
+                QCPItemRect* rect = new QCPItemRect(plot);
+                rect->topLeft->setCoords(x[lastP], 4);
+                rect->bottomRight->setCoords(x[lastT], -4);
+                rect->setBrush(brush);
+                plot->addItem(rect);
+                items.push_back(rect);
+
+                rect->setPen(pen);
+
+                brush.setColor(QColor(255,255,255,20));
+
+                rect = new QCPItemRect(plot);
+                rect->topLeft->setCoords(x[lastP], 3.5);
+                rect->bottomRight->setCoords(x[lastQ], -3.5);
+                rect->setBrush(brush);
+                plot->addItem(rect);
+                items.push_back(rect);
+
+                rect = new QCPItemRect(plot);
+                rect->topLeft->setCoords(x[lastS], 3.5);
+                rect->bottomRight->setCoords(x[lastT], -3.5);
+                rect->setBrush(brush);
+                plot->addItem(rect);
+                items.push_back(rect);
+
+                QCPItemText *text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText("PQ");
+                text->position->setCoords((x[lastP]+x[lastQ])/2, -4.3);
+
+                items.push_back(text);
+
+                text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText("ST");
+                text->position->setCoords((x[lastS]+x[lastT])/2, -4.3);
+
+                items.push_back(text);
+
+                float midPQ = 0;
+                for(int i=lastP; i<=lastQ; i++)
+                {
+                    midPQ += y[i];
+                }
+                midPQ /= (lastQ - lastP)+1;
+
+                float midST = 0;
+                for(int i=lastS; i<=lastT; i++)
+                {
+                    midST += y[i];
+                }
+                midST /= (lastT - lastS)+1;
+
+                text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText(QString::number(midPQ, 'g', 2));
+                text->position->setCoords((x[lastP]+x[lastQ])/2, 4.3);
+
+                items.push_back(text);
+
+                text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText(QString::number(midST, 'g', 2));
+                text->position->setCoords((x[lastS]+x[lastT])/2, 4.3);
+
+                items.push_back(text);
+
+                text = new QCPItemText(plot);
+                plot->addItem(text);
+                text->setText(QString("ST - PQ = ")+QString::number(midST - midPQ, 'g', 2));
+                text->position->setCoords((x[lastP]+x[lastT])/2, 5);
+
+                items.push_back(text);
+            }
         }
     }
 

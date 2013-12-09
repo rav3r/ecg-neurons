@@ -47,7 +47,7 @@ public:
     QWidget *tab_3;
     QGridLayout *gridLayout_4;
     QVBoxLayout *verticalLayout_4;
-    QCustomPlot *widget_2;
+    QCustomPlot *pPlot;
     QMenuBar *menuBar;
     QMenu *menuFile;
     QMenu *menuLearn;
@@ -126,10 +126,10 @@ public:
         verticalLayout_4 = new QVBoxLayout();
         verticalLayout_4->setSpacing(6);
         verticalLayout_4->setObjectName(QStringLiteral("verticalLayout_4"));
-        widget_2 = new QCustomPlot(tab_3);
-        widget_2->setObjectName(QStringLiteral("widget_2"));
+        pPlot = new QCustomPlot(tab_3);
+        pPlot->setObjectName(QStringLiteral("pPlot"));
 
-        verticalLayout_4->addWidget(widget_2);
+        verticalLayout_4->addWidget(pPlot);
 
 
         gridLayout_4->addLayout(verticalLayout_4, 0, 0, 1, 1);

@@ -69,7 +69,7 @@
         <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QCustomPlot" name="widget_2" native="true"/>
+           <widget class="QCustomPlot" name="pPlot" native="true"/>
           </item>
          </layout>
         </item>

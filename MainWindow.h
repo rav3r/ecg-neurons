@@ -38,6 +38,9 @@ private:
 
     // myocardial
     void fillMyocardialPlot(int** ANN, QCustomPlot* plot, EcgAnnotation& ann, QVector<double>& x, QVector<double>& y, double sr);
+
+    // pericarditis
+    void fillPericarditisPlot(int** ANN, QCustomPlot* plot, EcgAnnotation& ann, QVector<double>& x, QVector<double>& y, double sr);
 };
 
 #endif // MAINWINDOW_H
